@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { getFilteredEvents } from '../../helpers/api-util';
 //import { getFilteredEvents } from '../../dummy-data';
@@ -16,7 +17,8 @@ function FilteredEventsPage(props) {
   const filteredData = router.query.slug;
 
   const { data, error } = useSWR(
-    'https://maxnext-ca033-default-rtdb.europe-west1.firebasedatabase.app/events.json', (url) => fetch(url).then(res => res.json())
+    'https://maxnext-ca033-default-rtdb.europe-west1.firebasedatabase.app/events.json',
+    url => fetch(url).then(res => res.json())
   );
 
   useEffect(() => {
@@ -29,8 +31,20 @@ function FilteredEventsPage(props) {
     }
   }, [data]);
 
+  let pageHeadData = (
+    <Head>
+      <title>Filtered Events</title>
+      <meta name='description' content={`All events filtered.`} />
+    </Head>
+  );
+
   if (!loadedEvents) {
-    return <p className='center'>Loading...</p>;
+    return (
+      <>
+        {pageHeadData}
+        <p className='center'>Loading...</p>
+      </>
+    );
   }
 
   const filteredYear = filteredData[0];
@@ -39,17 +53,28 @@ function FilteredEventsPage(props) {
   const numYear = +filteredYear;
   const numMonth = +filteredMonth;
 
+  pageHeadData = (
+    <Head>
+      <title>Filtered Events</title>
+      <meta
+        name='description'
+        content={`All events for ${numMonth}/${numYear}.`}
+      />
+    </Head>
+  );
+
   if (
     isNaN(numYear) ||
     isNaN(numMonth) ||
     numYear > 2030 ||
     numYear < 2021 ||
     numMonth < 1 ||
-    numMonth > 12 || 
+    numMonth > 12 ||
     error
   ) {
     return (
       <>
+        {pageHeadData}
         <ErrorAlert>
           <p>Invalid filter! Please adjust filter values</p>
         </ErrorAlert>
@@ -68,11 +93,10 @@ function FilteredEventsPage(props) {
     );
   });
 
- 
-
   if (!filteredEvents || filteredEvents.length === 0) {
     return (
       <>
+        {pageHeadData}
         <ErrorAlert>
           <p className='center'>No events found for the chosen filters!</p>
         </ErrorAlert>
@@ -87,6 +111,7 @@ function FilteredEventsPage(props) {
 
   return (
     <>
+      {pageHeadData}
       <ResultsTitle date={date} />
       <EventList items={filteredEvents} />
     </>
